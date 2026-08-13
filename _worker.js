@@ -374,10 +374,9 @@ async function getSUB(api, request, 追加UA, userAgentHeader) {
 	let 订阅转换URLs = "";
 	let 异常订阅 = "";
 	const controller = new AbortController(); // 创建一个AbortController实例，用于取消请求
-	const timeout = setTimeout(() => {
-		controller.abort(); // 2秒后取消所有请求
-	}, 2000);
-
+    const timeout = setTimeout(() => {
+    controller.abort();
+    }, 10000);
 	try {
 		// 使用Promise.allSettled等待所有API请求完成，无论成功或失败
 		const responses = await Promise.allSettled(api.map(apiUrl => getUrl(request, apiUrl, 追加UA, userAgentHeader).then(response => response.ok ? response.text() : Promise.reject(response))));
