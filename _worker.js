@@ -413,23 +413,51 @@ async function getSUB(api, request, 追加UA, userAgentHeader) {
 			// 检查响应状态是否为'fulfilled'
 			if (response.status === 'fulfilled') {
 				const content = await response.value || 'null'; // 获取响应的内容
-				if (content.includes('proxies:')) {
-					//console.log('Clash订阅: ' + response.apiUrl);
-					订阅转换URLs += "|" + response.apiUrl; // Clash 配置
-				} else if (content.includes('outbounds"') && content.includes('inbounds"')) {
-					//console.log('Singbox订阅: ' + response.apiUrl);
-					订阅转换URLs += "|" + response.apiUrl; // Singbox 配置
-				} else if (content.includes('://')) {
-					//console.log('明文订阅: ' + response.apiUrl);
-					newapi += content + '\n'; // 追加内容
-				} else if (isValidBase64(content)) {
-					//console.log('Base64订阅: ' + response.apiUrl);
-					newapi += base64Decode(content) + '\n'; // 解码并追加内容
-				} else {
-					const 异常订阅LINK = `trojan://CMLiussss@127.0.0.1:8888?security=tls&allowInsecure=1&type=tcp&headerType=none#%E5%BC%82%E5%B8%B8%E8%AE%A2%E9%98%85%20${response.apiUrl.split('://')[1].split('/')[0]}`;
-					console.log('异常订阅: ' + 异常订阅LINK);
-					异常订阅 += `${异常订阅LINK}\n`;
-				}
+       if (
+           cleanContent.includes('proxies:') ||
+           cleanContent.includes('proxy-groups:') ||
+           cleanContent.includes('proxy-providers:')
+       ) {
+           console.log('Clash/Mihomo订阅: ' + response.apiUrl);
+           订阅转换URLs += "|" + response.apiUrl;
+
+       } else if (
+           cleanContent.includes('"outbounds"') ||
+           cleanContent.includes('"inbounds"')
+       ) {
+           console.log('Singbox订阅: ' + response.apiUrl);
+           订阅转换URLs += "|" + response.apiUrl;
+
+       } else if (
+           /(?:^|\n)(ss|ssr|vmess|vless|trojan|hysteria|hysteria2|hy2|tuic|wireguard):\/\//i.test(cleanContent)
+       ) {
+           console.log('明文节点订阅: ' + response.apiUrl);
+           newapi += cleanContent + '\n';
+
+       } else if (isValidBase64(cleanContent)) {
+           try {
+               const decoded = base64Decode(cleanContent);
+
+               if (
+                   decoded.includes('://') ||
+                   decoded.includes('proxies:')
+               ) {
+                   console.log('Base64订阅: ' + response.apiUrl);
+                   newapi += decoded + '\n';
+               } else {
+                   console.log('Base64内容无法识别，交给转换后端: ' + response.apiUrl);
+                   订阅转换URLs += "|" + response.apiUrl;
+               }
+
+           } catch (e) {
+               console.log('Base64解码失败，交给转换后端: ' + response.apiUrl);
+               订阅转换URLs += "|" + response.apiUrl;
+           }
+
+       } else {
+           console.log('未知订阅格式，交给转换后端: ' + response.apiUrl);
+           订阅转换URLs += "|" + response.apiUrl;
+       }
 			}
 		}
 	} catch (error) {
