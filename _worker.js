@@ -108,7 +108,8 @@ export default {
 			}
 
 			let subConverterUrl;
-			let 订阅转换URL = `${url.origin}/${await MD5MD5(fakeToken)}?token=${fakeToken}`;
+			// 给转换后端的内部订阅地址增加缓存破坏参数，避免 KV 更新后仍返回旧节点。
+			let 订阅转换URL = `${url.origin}/${await MD5MD5(fakeToken)}?token=${fakeToken}&_=${Date.now()}`;
 			//console.log(订阅转换URL);
 			let req_data = MainData;
 
@@ -183,6 +184,7 @@ export default {
 			// 构建响应头对象
 			const responseHeaders = {
 				"content-type": "text/plain; charset=utf-8",
+				"Cache-Control": "no-store, no-cache, must-revalidate",
 				"Profile-Update-Interval": `${SUBUpdateTime}`,
 				"Profile-web-page-url": request.url.includes('?') ? request.url.split('?')[0] : request.url,
 				//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
